@@ -1,34 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import './app.css';
+import styles from './app.module.css';
+import SearchHeader from './components/search_header/search_header';
+import VideoDetail from './components/video_detail/video_detail';
 import VideoList from './components/video_list/video_list';
 
 
-function App() {
+
+
+
+function App({youtube}) {
   const [videos, setVideos] = useState([]);
-   
+  const [selectedVideo, setSelctedVideo] = useState(null);
+  
+  const selectVideo = (video) =>{
+    setSelctedVideo(video);
+  }
+  
+  const search = query => {
+    setSelctedVideo(null);
+      youtube.search(query)
+      .then(videos =>setVideos(videos));
+
+  };
   
 
 
   useEffect(()=>{
-    const requestOptions = {
-      method: 'GET',
-      redirect: 'follow'
-    };
-    
-    fetch(
-      "https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&maxResults=25&key=AIzaSyAuRiyS9bfrflKaxpjk8pJ4jHTdW6wZUHQ", 
-      requestOptions
-      )
-      .then(response => response.json())
-      .then(result => setVideos(result.items))
-      .then(result => console.log(result))
-      .catch(error => console.log('error', error));
-     
+    youtube.mostPopular()
+    .then(videos =>setVideos(videos));
   },[]); //[] mount에만 호출, [a] a가 업데이트 될때마다 호출
   
   
   //component,prop가 mount,update시에만 호출
 
-  return <VideoList videos = {videos}/>
+  return( 
+  <div className={styles.app}>
+  <SearchHeader onSearch={search}/>
+    <section className={styles.content}>
+    {selectedVideo && <div className={styles.detail}>
+    <VideoDetail video={selectedVideo} />
+    </div>
+    }
+    <div className = {styles.list}>
+    <VideoList videos = {videos} onVideoClick={selectVideo} display={selectedVideo? 'list' : 'grid'}/>
+    </div>
+    </section>
+  </div>
+  )
 }
 export default App;
